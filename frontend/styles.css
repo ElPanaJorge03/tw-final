@@ -1,0 +1,246 @@
+:root {
+  --bg: #f3efe7;
+  --text: #1a1a1a;
+  --muted: #5e5e5e;
+  --accent: #ff6a3d;
+  --accent-dark: #e1532d;
+  --card: #fffaf2;
+  --stroke: #2b2b2b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top left, #ffd6c3, transparent 50%),
+    radial-gradient(circle at bottom right, #d9e7ff, transparent 45%);
+  z-index: -2;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(transparent 95%, rgba(0, 0, 0, 0.05) 95%),
+    linear-gradient(90deg, transparent 95%, rgba(0, 0, 0, 0.05) 95%);
+  background-size: 40px 40px;
+  z-index: -1;
+  opacity: 0.4;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 48px 8vw 24px;
+}
+
+.hero__content h1 {
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  line-height: 1.05;
+  max-width: 520px;
+  margin-bottom: 12px;
+}
+
+.hero__lead {
+  max-width: 420px;
+  color: var(--muted);
+}
+
+.hero__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+
+.hero__badge {
+  border: 1px solid var(--stroke);
+  padding: 10px 16px;
+  background: #fff;
+  font-weight: 600;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 16px 8vw 48px;
+}
+
+.card {
+  background: var(--card);
+  border: 2px solid var(--stroke);
+  padding: 24px;
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form.inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+}
+
+input {
+  border: 2px solid var(--stroke);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: 2px solid var(--stroke);
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--text);
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  background: transparent;
+  border: 2px solid var(--stroke);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tab.active {
+  background: var(--text);
+  color: #fff;
+}
+
+.alert {
+  padding: 10px 12px;
+  border: 2px solid var(--stroke);
+  background: #fff0e8;
+  color: #a53b1f;
+  display: none;
+}
+
+.alert.show {
+  display: block;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 2px solid var(--stroke);
+  background: #fff;
+}
+
+.list button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.recipes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recipe {
+  border: 2px solid var(--stroke);
+  padding: 16px;
+  background: #fff;
+  display: grid;
+  gap: 10px;
+}
+
+.recipe h3 {
+  font-size: 1.2rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.hidden {
+  display: none;
+}
+
+.footer {
+  padding: 20px 8vw 40px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
