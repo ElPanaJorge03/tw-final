@@ -9,3 +9,4 @@ passlib[bcrypt]
 groq
 pytest
 httpx
+email-validator
