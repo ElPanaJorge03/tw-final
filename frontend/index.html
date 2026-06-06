@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Recetas con Inventario</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
@@ -62,7 +65,7 @@
         <div class="alert" id="auth-alert"></div>
       </section>
 
-      <section class="card" id="inventory-card">
+      <section class="card hidden" id="inventory-card">
         <div class="card__header">
           <h2>Inventario</h2>
           <button class="btn ghost" id="logout-btn">Cerrar sesion</button>
@@ -79,7 +82,7 @@
         <ul class="list" id="ingredient-list"></ul>
       </section>
 
-      <section class="card" id="recipes-card">
+      <section class="card hidden" id="recipes-card">
         <div class="card__header">
           <h2>Recetas</h2>
           <button class="btn" id="generate-btn">Generar receta</button>

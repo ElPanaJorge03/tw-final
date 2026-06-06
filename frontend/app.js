@@ -1,29 +1,40 @@
 const API_BASE = "http://38.180.81.158:8000";
 
-const registerForm = document.getElementById("register-form");
-const loginForm = document.getElementById("login-form");
-const ingredientForm = document.getElementById("ingredient-form");
-const ingredientList = document.getElementById("ingredient-list");
-const recipesList = document.getElementById("recipes-list");
-const generateBtn = document.getElementById("generate-btn");
-const logoutBtn = document.getElementById("logout-btn");
-const authAlert = document.getElementById("auth-alert");
-const healthStatus = document.getElementById("health-status");
-
-const tabs = document.querySelectorAll(".tab");
+/* ── DOM refs ─────────────────────────────────────────────── */
+const authCard        = document.getElementById("auth-card");
+const inventoryCard   = document.getElementById("inventory-card");
+const recipesCard     = document.getElementById("recipes-card");
+const registerForm    = document.getElementById("register-form");
+const loginForm       = document.getElementById("login-form");
+const ingredientForm  = document.getElementById("ingredient-form");
+const ingredientList  = document.getElementById("ingredient-list");
+const recipesList     = document.getElementById("recipes-list");
+const generateBtn     = document.getElementById("generate-btn");
+const logoutBtn       = document.getElementById("logout-btn");
+const authAlert       = document.getElementById("auth-alert");
+const healthStatus    = document.getElementById("health-status");
+const tabs            = document.querySelectorAll(".tab");
 
 const tokenKey = "tw_token";
 
-const showAlert = (message) => {
+/* ── Alerts ───────────────────────────────────────────────── */
+let alertTimer = null;
+
+const showAlert = (message, isSuccess = false) => {
+  clearTimeout(alertTimer);
   authAlert.textContent = message;
   authAlert.classList.add("show");
+  authAlert.classList.toggle("success", isSuccess);
+  alertTimer = setTimeout(hideAlert, 5000);
 };
 
 const hideAlert = () => {
+  clearTimeout(alertTimer);
   authAlert.textContent = "";
-  authAlert.classList.remove("show");
+  authAlert.classList.remove("show", "success");
 };
 
+/* ── Tabs (register / login) ─────────────────────────────── */
 const setActiveTab = (tabId) => {
   tabs.forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.tab === tabId);
@@ -38,10 +49,28 @@ tabs.forEach((tab) => {
   tab.addEventListener("click", () => setActiveTab(tab.dataset.tab));
 });
 
-const getToken = () => localStorage.getItem(tokenKey);
-const setToken = (token) => localStorage.setItem(tokenKey, token);
+/* ── Token helpers ────────────────────────────────────────── */
+const getToken   = () => localStorage.getItem(tokenKey);
+const setToken   = (token) => localStorage.setItem(tokenKey, token);
 const clearToken = () => localStorage.removeItem(tokenKey);
 
+const isLoggedIn = () => !!getToken();
+
+/* ── UI state management ──────────────────────────────────── */
+const updateUI = () => {
+  const logged = isLoggedIn();
+
+  /* Show auth card only when NOT logged in */
+  authCard.classList.toggle("hidden", logged);
+
+  /* Show inventory + recipes only when logged in */
+  inventoryCard.classList.toggle("hidden", !logged);
+  recipesCard.classList.toggle("hidden", !logged);
+
+  hideAlert();
+};
+
+/* ── HTTP helper ──────────────────────────────────────────── */
 const authHeaders = () => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -57,6 +86,13 @@ const request = async (path, options = {}) => {
     ...options,
   });
 
+  /* Handle 401 – expired or invalid token → force logout */
+  if (response.status === 401) {
+    clearToken();
+    updateUI();
+    throw new Error("Sesión expirada. Inicia sesión nuevamente.");
+  }
+
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}));
     throw new Error(detail.detail || "Error en la solicitud");
@@ -68,61 +104,91 @@ const request = async (path, options = {}) => {
   return response.json();
 };
 
+/* ── Load ingredients ─────────────────────────────────────── */
 const loadIngredients = async () => {
-  const items = await request("/ingredientes");
-  ingredientList.innerHTML = "";
+  try {
+    const items = await request("/ingredientes");
+    ingredientList.innerHTML = "";
 
-  items.forEach((item) => {
-    const li = document.createElement("li");
-    li.innerHTML = `<span>${item.nombre} · ${item.cantidad} ${item.unidad || ""}</span>`;
+    if (items.length === 0) {
+      ingredientList.innerHTML = '<li class="empty-state">Sin ingredientes. ¡Agrega algunos!</li>';
+      return;
+    }
 
-    const del = document.createElement("button");
-    del.textContent = "Eliminar";
-    del.addEventListener("click", async () => {
-      await request(`/ingredientes/${item.id}`, { method: "DELETE" });
-      loadIngredients();
+    items.forEach((item) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${item.nombre} · ${item.cantidad} ${item.unidad || ""}</span>`;
+
+      const del = document.createElement("button");
+      del.textContent = "✕";
+      del.title = "Eliminar";
+      del.addEventListener("click", async () => {
+        try {
+          await request(`/ingredientes/${item.id}`, { method: "DELETE" });
+          loadIngredients();
+        } catch (error) {
+          showAlert(error.message);
+        }
+      });
+
+      li.appendChild(del);
+      ingredientList.appendChild(li);
     });
-
-    li.appendChild(del);
-    ingredientList.appendChild(li);
-  });
+  } catch (error) {
+    showAlert(error.message);
+  }
 };
 
+/* ── Load recipes ─────────────────────────────────────────── */
 const loadRecipes = async () => {
-  const items = await request("/recetas");
-  recipesList.innerHTML = "";
+  try {
+    const items = await request("/recetas");
+    recipesList.innerHTML = "";
 
-  items.forEach((recipe) => {
-    const card = document.createElement("div");
-    card.className = "recipe";
+    if (items.length === 0) {
+      recipesList.innerHTML = '<div class="empty-state">Sin recetas. ¡Genera una!</div>';
+      return;
+    }
 
-    card.innerHTML = `
-      <h3>${recipe.nombre_plato}</h3>
-      <div class="muted">${recipe.tiempo_estimado} · ${recipe.nivel_dificultad}</div>
-      <strong>Ingredientes</strong>
-      <ul>
-        ${recipe.ingredientes
-          .map((ing) => `<li>${ing.nombre} - ${ing.cantidad} ${ing.unidad || ""}</li>`)
-          .join("")}
-      </ul>
-      <strong>Pasos</strong>
-      <ol>
-        ${recipe.pasos.map((paso) => `<li>${paso}</li>`).join("")}
-      </ol>
-      <div class="recipe__actions">
-        <button class="btn ghost" data-delete>Eliminar</button>
-      </div>
-    `;
+    items.forEach((recipe) => {
+      const card = document.createElement("div");
+      card.className = "recipe";
 
-    card.querySelector("[data-delete]").addEventListener("click", async () => {
-      await request(`/recetas/${recipe.id}`, { method: "DELETE" });
-      loadRecipes();
+      card.innerHTML = `
+        <h3>${recipe.nombre_plato}</h3>
+        <div class="muted">${recipe.tiempo_estimado} · ${recipe.nivel_dificultad}</div>
+        <strong>Ingredientes</strong>
+        <ul>
+          ${recipe.ingredientes
+            .map((ing) => `<li>${ing.nombre} - ${ing.cantidad} ${ing.unidad || ""}</li>`)
+            .join("")}
+        </ul>
+        <strong>Pasos</strong>
+        <ol>
+          ${recipe.pasos.map((paso) => `<li>${paso}</li>`).join("")}
+        </ol>
+        <div class="recipe__actions">
+          <button class="btn ghost" data-delete>Eliminar</button>
+        </div>
+      `;
+
+      card.querySelector("[data-delete]").addEventListener("click", async () => {
+        try {
+          await request(`/recetas/${recipe.id}`, { method: "DELETE" });
+          loadRecipes();
+        } catch (error) {
+          showAlert(error.message);
+        }
+      });
+
+      recipesList.appendChild(card);
     });
-
-    recipesList.appendChild(card);
-  });
+  } catch (error) {
+    showAlert(error.message);
+  }
 };
 
+/* ── Register ─────────────────────────────────────────────── */
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideAlert();
@@ -135,13 +201,15 @@ registerForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    showAlert("Cuenta creada. Ahora inicia sesion.");
+    registerForm.reset();
+    showAlert("¡Cuenta creada! Ahora inicia sesión.", true);
     setActiveTab("login");
   } catch (error) {
     showAlert(error.message);
   }
 });
 
+/* ── Login ────────────────────────────────────────────────── */
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideAlert();
@@ -155,12 +223,15 @@ loginForm.addEventListener("submit", async (event) => {
       body: JSON.stringify(payload),
     });
     setToken(data.access_token);
+    loginForm.reset();
+    updateUI();
     await Promise.all([loadIngredients(), loadRecipes()]);
   } catch (error) {
     showAlert(error.message);
   }
 });
 
+/* ── Add ingredient ───────────────────────────────────────── */
 ingredientForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   hideAlert();
@@ -180,10 +251,11 @@ ingredientForm.addEventListener("submit", async (event) => {
   }
 });
 
+/* ── Generate recipe ──────────────────────────────────────── */
 generateBtn.addEventListener("click", async () => {
   hideAlert();
   generateBtn.disabled = true;
-  generateBtn.textContent = "Generando...";
+  generateBtn.textContent = "Generando…";
 
   try {
     await request("/recetas/generar", { method: "POST" });
@@ -196,13 +268,20 @@ generateBtn.addEventListener("click", async () => {
   }
 });
 
+/* ── Logout ───────────────────────────────────────────────── */
 logoutBtn.addEventListener("click", () => {
   clearToken();
   ingredientList.innerHTML = "";
   recipesList.innerHTML = "";
+  updateUI();
 });
 
+/* ── Boot ─────────────────────────────────────────────────── */
 const boot = async () => {
+  /* Set initial UI state */
+  updateUI();
+
+  /* Health check */
   try {
     const data = await request("/health");
     healthStatus.textContent = `API: ${data.status}`;
@@ -210,9 +289,13 @@ const boot = async () => {
     healthStatus.textContent = "API: no disponible";
   }
 
-  if (getToken()) {
-    loadIngredients();
-    loadRecipes();
+  /* If there's a saved token, try loading data */
+  if (isLoggedIn()) {
+    try {
+      await Promise.all([loadIngredients(), loadRecipes()]);
+    } catch {
+      /* Token was invalid – updateUI already ran via 401 handler */
+    }
   }
 };
 
