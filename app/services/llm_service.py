@@ -16,7 +16,7 @@ class LLMService:
 			raise RuntimeError("GROQ_API_KEY is not set")
 
 		self._client = Groq(api_key=api_key)
-		self._model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+		self._model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 	def generate_recipe(self, inventario: list[dict[str, Any]]) -> dict[str, Any]:
 		if not inventario:
