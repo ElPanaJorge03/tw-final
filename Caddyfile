@@ -1,3 +1,7 @@
 hwrecetas.lat {
     reverse_proxy app:8000
 }
+
+:80 {
+    reverse_proxy app:8000
+}

@@ -77,14 +77,19 @@ const authHeaders = () => {
 };
 
 const request = async (path, options = {}) => {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+        ...(options.headers || {}),
+      },
+      ...options,
+    });
+  } catch (networkError) {
+    throw new Error("No se pudo conectar con el servidor. Verifica tu conexión.");
+  }
 
   /* Handle 401 – expired or invalid token → force logout */
   if (response.status === 401) {
@@ -94,8 +99,22 @@ const request = async (path, options = {}) => {
   }
 
   if (!response.ok) {
-    const detail = await response.json().catch(() => ({}));
-    throw new Error(detail.detail || "Error en la solicitud");
+    let errorMsg = `Error ${response.status}`;
+    try {
+      const body = await response.json();
+      if (typeof body.detail === "string") {
+        errorMsg = body.detail;
+      } else if (Array.isArray(body.detail)) {
+        /* FastAPI validation errors: [{loc:[...], msg:"...", type:"..."}] */
+        errorMsg = body.detail.map((e) => e.msg).join(", ");
+      } else if (body.message) {
+        errorMsg = body.message;
+      }
+    } catch {
+      /* Response wasn't JSON – use status text */
+      errorMsg = response.statusText || errorMsg;
+    }
+    throw new Error(errorMsg);
   }
 
   if (response.status === 204) {
