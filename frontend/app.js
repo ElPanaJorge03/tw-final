@@ -11,7 +11,7 @@ const ingredientList  = document.getElementById("ingredient-list");
 const recipesList     = document.getElementById("recipes-list");
 const generateBtn     = document.getElementById("generate-btn");
 const logoutBtn       = document.getElementById("logout-btn");
-const authAlert       = document.getElementById("auth-alert");
+const globalAlert     = document.getElementById("global-alert");
 const healthStatus    = document.getElementById("health-status");
 const tabs            = document.querySelectorAll(".tab");
 
@@ -22,16 +22,16 @@ let alertTimer = null;
 
 const showAlert = (message, isSuccess = false) => {
   clearTimeout(alertTimer);
-  authAlert.textContent = message;
-  authAlert.classList.add("show");
-  authAlert.classList.toggle("success", isSuccess);
+  globalAlert.textContent = message;
+  globalAlert.classList.add("show");
+  globalAlert.classList.toggle("success", isSuccess);
   alertTimer = setTimeout(hideAlert, 5000);
 };
 
 const hideAlert = () => {
   clearTimeout(alertTimer);
-  authAlert.textContent = "";
-  authAlert.classList.remove("show", "success");
+  globalAlert.textContent = "";
+  globalAlert.classList.remove("show", "success");
 };
 
 /* ── Tabs (register / login) ─────────────────────────────── */
