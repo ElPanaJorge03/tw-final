@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "http://38.180.81.158:8000";
 
 const registerForm = document.getElementById("register-form");
 const loginForm = document.getElementById("login-form");
