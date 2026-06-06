@@ -54,19 +54,29 @@ class LLMService:
 		)
 
 	def _call_llm(self, prompt: str) -> str:
-		response = self._client.chat.completions.create(
-			model=self._model,
-			messages=[
-				{"role": "system", "content": "Genera recetas en JSON estricto."},
-				{"role": "user", "content": prompt},
-			],
-			temperature=0.2,
-		)
-
-		content = response.choices[0].message.content
-		if not content:
-			raise LLMServiceError("Respuesta vacia del LLM")
-		return content
+		import groq
+		try:
+			response = self._client.chat.completions.create(
+				model=self._model,
+				messages=[
+					{"role": "system", "content": "Genera recetas en JSON estricto."},
+					{"role": "user", "content": prompt},
+				],
+				temperature=0.2,
+				response_format={"type": "json_object"},
+			)
+			content = response.choices[0].message.content
+			if not content:
+				raise LLMServiceError("Respuesta vacia del LLM")
+			return content
+		except groq.APIConnectionError as exc:
+			raise LLMServiceError(f"No se pudo conectar a la API de Groq: {exc}") from exc
+		except groq.AuthenticationError as exc:
+			raise LLMServiceError("Clave de API de Groq invalida o no autorizada") from exc
+		except groq.RateLimitError as exc:
+			raise LLMServiceError("Limite de peticiones de la API de Groq excedido") from exc
+		except Exception as exc:
+			raise LLMServiceError(f"Error inesperado al llamar a Groq: {exc}") from exc
 
 	def _parse_response(self, content: str) -> dict[str, Any]:
 		payload = self._extract_json(content)
